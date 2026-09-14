@@ -14,19 +14,11 @@ the plant myself — the work here is on the control side.
 A single PID loop. I tuned it with Simulink's auto-tuner and then iterated the gains
 manually, judging the step response by overshoot and settling time.
 
-## Known limitation
+## A problem I ran into
 
-The controller performs well when it engages close to the target speed, but degrades
-when the initial error is large: the response either oscillates or takes too long to
-settle. I read this as the expected behaviour of a linear controller operating away from
-its design point.
+The controller settled cleanly when it engaged close to the target speed, but with a
+large initial error the response overshot the target and then took a long time to settle.
 
-In practice the useful range is narrow anyway, since the driver is already near the pit
-lane limit when the limiter engages, so I accepted this for the first version.
-
-## Next step
-
-Add a switching scheme: while the speed is far from the target, act directly on the
-motor; hand over to the PID once the gap is small enough for it to work properly. The
-open problem is making that handover smooth, so the control signal does not jump when
-the PID takes over.
+I traced this to integral windup: while the actuator is saturated the integral term keeps
+accumulating, so the controller has to unwind that accumulated error before it can
+respond properly. Enabling anti-windup in the PID block fixed it.
